@@ -1,0 +1,17 @@
+{
+  "name": "codex-at",
+  "version": "0.1.0",
+  "description": "Schedule detached Codex CLI runs in a specific directory.",
+  "type": "module",
+  "bin": {
+    "codex-at": "src/index.ts"
+  },
+  "scripts": {
+    "start": "node --experimental-strip-types src/index.ts",
+    "check": "node --experimental-strip-types src/index.ts --help"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "license": "MIT"
+}
