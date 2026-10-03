@@ -12,7 +12,7 @@ import {
 } from 'node:fs';
 import { homedir } from 'node:os';
 import { resolve } from 'node:path';
-import { spawn } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
 import { parseArgs } from 'node:util';
 
@@ -135,9 +135,25 @@ function codexBinary(): string {
   return process.platform === 'win32' ? 'codex.cmd' : 'codex';
 }
 
+function codexAutomationArgs(): string[] {
+  const result = spawnSync(codexBinary(), ['exec', '--help'], {
+    encoding: 'utf8',
+    windowsHide: true,
+  });
+  const helpText = `${result.stdout ?? ''}\n${result.stderr ?? ''}`;
+
+  if (helpText.includes('--approve-for-me')) return ['--approve-for-me'];
+  if (helpText.includes('--full-auto')) return ['--full-auto'];
+  if (helpText.includes('--sandbox')) return ['--sandbox', 'workspace-write'];
+
+  throw new Error(
+    'Could not find a supported Codex automation flag. Update Codex CLI or use --no-full-auto.',
+  );
+}
+
 function codexArgs(task: Task): string[] {
   const args = ['exec'];
-  if (task.fullAuto) args.push('--full-auto');
+  if (task.fullAuto) args.push(...codexAutomationArgs());
   args.push(...task.extraArgs);
   if (task.resumeLast) args.push('resume', '--last', task.prompt);
   else args.push(task.prompt);
