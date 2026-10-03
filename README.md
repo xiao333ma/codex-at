@@ -14,6 +14,7 @@ A common use case is resuming unfinished Codex work after your usage limit reset
 - Resume the latest Codex session with `--resume-last`
 - Run new prompts with `codex exec`
 - Detached execution: Codex keeps running after the scheduler exits
+- Automatically adapts to current and older Codex CLI automation flags
 - List, remove, and manually run scheduled tasks
 - Per-task log files
 - No runtime npm dependencies
@@ -58,13 +59,15 @@ codex-at add \
   --name "resume-after-limit"
 ```
 
-This launches approximately:
+On current Codex CLI versions this launches approximately:
 
 ```bash
 cd ~/projects/my-app
-codex exec --full-auto resume --last \
+codex exec --approve-for-me resume --last \
   "Continue the unfinished task from where you left off. Finish it and verify the result."
 ```
+
+On older Codex CLI versions that still support `--full-auto`, `codex-at` automatically falls back to that flag.
 
 You can provide your own continuation prompt:
 
@@ -148,11 +151,19 @@ codex-at status
 
 Task IDs may be shortened as long as the prefix is unique.
 
-## Full-auto mode
+## Automation mode
 
-Scheduled tasks use `codex exec --full-auto` by default because unattended jobs may otherwise stop and wait for routine approval.
+Scheduled tasks automatically detect what the installed Codex CLI supports when they launch.
 
-Disable it when needed:
+The current preference order is:
+
+1. `--approve-for-me` on current Codex CLI versions
+2. `--full-auto` on older compatible versions
+3. `--sandbox workspace-write` as a limited fallback
+
+This avoids hard-coding a Codex flag that may change between CLI releases.
+
+Disable automatic approval/sandbox configuration when needed:
 
 ```bash
 codex-at add \
@@ -161,6 +172,8 @@ codex-at add \
   --prompt "Review this repository" \
   --no-full-auto
 ```
+
+The option name `--no-full-auto` is retained for backward compatibility with existing `codex-at` tasks and scripts.
 
 ## Pass extra Codex arguments
 
@@ -181,12 +194,13 @@ Tasks are stored locally. When a pending task exists, `codex-at` starts a detach
 
 When the task becomes due, the scheduler:
 
-1. Opens a log file for the task.
-2. Starts `codex exec` in the configured working directory.
-3. Detaches from the Codex process.
-4. Marks the task as launched.
-5. Continues waiting for any remaining tasks.
-6. Exits automatically when no pending tasks remain.
+1. Detects the automation flags supported by the installed Codex CLI.
+2. Opens a log file for the task.
+3. Starts `codex exec` in the configured working directory.
+4. Detaches from the Codex process.
+5. Marks the task as launched.
+6. Continues waiting for any remaining tasks.
+7. Exits automatically when no pending tasks remain.
 
 The launched Codex process is independent of the scheduler and continues running on its own.
 
