@@ -1,12 +1,14 @@
 {
   "name": "codex-at",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Schedule detached Codex CLI runs in a specific directory.",
   "type": "module",
   "bin": {
     "codex-at": "src/index.ts"
   },
   "scripts": {
+    "prepare": "node scripts/prepare.mjs",
+    "postinstall": "node scripts/prepare.mjs",
     "start": "node --experimental-strip-types src/index.ts",
     "check": "node --experimental-strip-types src/index.ts --help"
   },
